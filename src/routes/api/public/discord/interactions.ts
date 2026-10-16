@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifyDiscordSignature, loadTemplate, postRules, dc } from "@/lib/discord.server";
+import { verifyDiscordSignature, loadTemplate, postRules } from "@/lib/discord.server";
 
 const json = (b: unknown) => new Response(JSON.stringify(b), { headers: { "Content-Type": "application/json" } });
 
@@ -48,7 +48,6 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
             }
           })();
           void work;
-          void dc;
           return json({ type: 5 });
         }
 
