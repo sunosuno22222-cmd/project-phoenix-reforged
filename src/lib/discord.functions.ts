@@ -4,7 +4,7 @@ import { z } from "zod";
 const auth = z.object({ password: z.string().max(200) });
 
 async function guard(password: string) {
-  const expected = process.env.PANEL_PASSWORD;
+  const expected = process.env["PANEL_PASSWORD"];
   if (!expected) throw new Error("PANEL_PASSWORD não configurada.");
   if (password !== expected) throw new Error("Senha do painel incorreta.");
   return import("./discord.server");
@@ -24,8 +24,8 @@ export const getOverview = createServerFn({ method: "POST" })
         username: bot.username,
         avatar: bot.avatar ? `https://cdn.discordapp.com/avatars/${bot.id}/${bot.avatar}.png` : null,
       },
-      inviteUrl: `https://discord.com/oauth2/authorize?client_id=${process.env.DISCORD_APPLICATION_ID?.trim() || bot.id}&permissions=8&scope=bot%20applications.commands`,
-      hasPublicKey: Boolean(process.env.DISCORD_PUBLIC_KEY),
+      inviteUrl: `https://discord.com/oauth2/authorize?client_id=${process.env["DISCORD_APPLICATION_ID"]?.trim() || bot.id}&permissions=8&scope=bot%20applications.commands`,
+      hasPublicKey: Boolean(process.env["DISCORD_PUBLIC_KEY"]),
       guilds: guilds.map((g) => ({
         id: g.id,
         name: g.name,

@@ -3,7 +3,7 @@ import { PANELEIRO_RULES_LIST } from "./rules";
 const API = "https://discord.com/api/v10";
 
 export function botToken() {
-  const t = process.env.DISCORD_BOT_TOKEN?.trim();
+  const t = process.env["DISCORD_BOT_TOKEN"]?.trim();
   if (!t) throw new Error("DISCORD_BOT_TOKEN não configurado.");
   return t;
 }
@@ -58,7 +58,7 @@ export const SLASH_COMMANDS = [
 
 export async function registerCommands(guildId?: string) {
   const me = await dc<{ id: string }>("/users/@me");
-  const appId = process.env.DISCORD_APPLICATION_ID?.trim() || me.id;
+  const appId = process.env["DISCORD_APPLICATION_ID"]?.trim() || me.id;
   if (guildId) {
     await dc(`/applications/${appId}/guilds/${guildId}/commands`, {
       method: "PUT",
@@ -173,7 +173,7 @@ function hexToBytes(hex: string) {
 }
 
 export async function verifyDiscordSignature(body: string, signature: string, timestamp: string) {
-  const pub = process.env.DISCORD_PUBLIC_KEY?.trim();
+  const pub = process.env["DISCORD_PUBLIC_KEY"]?.trim();
   if (!pub || !signature || !timestamp) return false;
   try {
     const key = await crypto.subtle.importKey("raw", hexToBytes(pub), { name: "Ed25519" }, false, ["verify"]);
