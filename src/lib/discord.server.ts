@@ -54,7 +54,73 @@ export const SLASH_COMMANDS = [
     default_member_permissions: "8",
     dm_permission: false,
   },
+  {
+    name: "ip-embed",
+    description: "Envia o painel de busca de IP com ticket (só o dono)",
+    default_member_permissions: "8",
+    dm_permission: false,
+  },
 ];
+
+export const IP_PANEL = {
+  embeds: [{
+    title: "👁 ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
+    description: "Clique no botão para abrir um ticket privado e consultar um IP.\nVocê recebe o mapa + todas as informações.",
+    color: 0xb91c1c,
+  }],
+  components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", emoji: { name: "👁" }, custom_id: "ip_open" }] }],
+};
+
+export async function openIpTicket(guildId: string, userId: string, username: string) {
+  const me = await dc<{ id: string }>("/users/@me");
+  const ch = await dc<{ id: string }>(`/guilds/${guildId}/channels`, {
+    method: "POST",
+    body: JSON.stringify({
+      name: `・ɪᴘ-${username}`.slice(0, 90),
+      type: 0,
+      permission_overwrites: [
+        { id: guildId, type: 0, deny: "1024" },
+        { id: userId, type: 1, allow: "3072" },
+        { id: me.id, type: 1, allow: "3088" },
+      ],
+    }),
+  });
+  await dc(`/channels/${ch.id}/messages`, {
+    method: "POST",
+    body: JSON.stringify({
+      content: `<@${userId}>`,
+      embeds: [{ title: "👁 ᴛɪᴄᴋᴇᴛ ᴅᴇ ɪᴘ", description: "Clique em **Digitar IP** e informe o endereço.", color: 0xb91c1c }],
+      components: [{ type: 1, components: [
+        { type: 2, style: 1, label: "Digitar IP", custom_id: "ip_input" },
+        { type: 2, style: 2, label: "Fechar ticket", custom_id: "ip_close" },
+      ] }],
+    }),
+  });
+  return ch.id;
+}
+
+export async function lookupIp(ip: string) {
+  const r = (await (await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`)).json()) as any;
+  if (!r.success) throw new Error(r.message || "IP inválido");
+  const z = 10;
+  const n = 2 ** z;
+  const x = Math.floor(((r.longitude + 180) / 360) * n);
+  const lat = (r.latitude * Math.PI) / 180;
+  const y = Math.floor(((1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2) * n);
+  const f = (name: string, value: unknown) => ({ name, value: String(value || "—").slice(0, 1024), inline: true });
+  return {
+    title: `👁 ${r.ip}`,
+    color: 0xb91c1c,
+    fields: [
+      f("País", `${r.flag?.emoji ?? ""} ${r.country}`), f("Região", r.region), f("Cidade", r.city),
+      f("CEP", r.postal), f("Coordenadas", `${r.latitude}, ${r.longitude}`), f("Fuso", r.timezone?.id),
+      f("Provedor", r.connection?.isp), f("Organização", r.connection?.org), f("ASN", r.connection?.asn),
+      f("Tipo", r.type), f("Continente", r.continent), f("Google Maps", `[abrir](https://www.google.com/maps?q=${r.latitude},${r.longitude})`),
+    ],
+    image: { url: `https://tile.openstreetmap.org/${z}/${x}/${y}.png` },
+    footer: { text: "PanelBot • rastreador" },
+  };
+}
 
 export async function registerCommands(guildId?: string) {
   const me = await dc<{ id: string }>("/users/@me");
