@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifyDiscordSignature, loadTemplate, postRules, isGuildOwner } from "@/lib/discord.server";
+import { verifyDiscordSignature, loadTemplate, postRules, isGuildOwner, dc, IP_PANEL, openIpTicket, lookupIp } from "@/lib/discord.server";
 
 const json = (b: unknown) => new Response(JSON.stringify(b), { headers: { "Content-Type": "application/json" } });
 
@@ -17,7 +17,41 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
 
         const i = JSON.parse(body);
         if (i.type === 1) return json({ type: 1 });
-        if (i.type !== 2) return json({ type: 4, data: { content: "Interação não suportada.", flags: 64 } });
+        const eph = (content: string) => json({ type: 4, data: { content, flags: 64 } });
+        const u = i.member?.user ?? i.user;
+
+        if (i.type === 3) {
+          const cid = i.data?.custom_id;
+          try {
+            if (cid === "ip_open") {
+              const id = await openIpTicket(i.guild_id, u.id, u.username);
+              return eph(`Ticket aberto: <#${id}>`);
+            }
+            if (cid === "ip_input") {
+              return json({ type: 9, data: { custom_id: "ip_modal", title: "Consultar IP", components: [
+                { type: 1, components: [{ type: 4, custom_id: "ip", label: "Endereço IP", style: 1, min_length: 3, max_length: 45, required: true, placeholder: "8.8.8.8" }] },
+              ] } });
+            }
+            if (cid === "ip_close") {
+              await dc(`/channels/${i.channel_id}`, { method: "DELETE" });
+              return json({ type: 6 });
+            }
+          } catch (e) {
+            return eph(`Erro: ${(e as Error).message}`);
+          }
+          return eph("Botão desconhecido.");
+        }
+
+        if (i.type === 5 && i.data?.custom_id === "ip_modal") {
+          const ip = String(i.data.components?.[0]?.components?.[0]?.value ?? "").trim();
+          try {
+            return json({ type: 4, data: { embeds: [await lookupIp(ip)] } });
+          } catch (e) {
+            return eph(`Não consegui consultar: ${(e as Error).message}`);
+          }
+        }
+
+        if (i.type !== 2) return eph("Interação não suportada.");
 
         const name = i.data?.name;
 
