@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifyDiscordSignature, loadTemplate, postRules } from "@/lib/discord.server";
+import { verifyDiscordSignature, loadTemplate, postRules, isGuildOwner } from "@/lib/discord.server";
 
 const json = (b: unknown) => new Response(JSON.stringify(b), { headers: { "Content-Type": "application/json" } });
 
@@ -20,6 +20,17 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
         if (i.type !== 2) return json({ type: 4, data: { content: "Interação não suportada.", flags: 64 } });
 
         const name = i.data?.name;
+
+        // Only the guild owner can run these commands.
+        const userId = i.member?.user?.id ?? i.user?.id;
+        try {
+          if (!userId || !(await isGuildOwner(i.guild_id, userId))) {
+            return json({ type: 4, data: { content: "Só o dono do servidor pode usar este comando.", flags: 64 } });
+          }
+        } catch (e) {
+          return json({ type: 4, data: { content: `Erro ao verificar permissão: ${(e as Error).message}`, flags: 64 } });
+        }
+
         const followup = (content: string) =>
           fetch(`https://discord.com/api/v10/webhooks/${i.application_id}/${i.token}/messages/@original`, {
             method: "PATCH",
