@@ -227,9 +227,9 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
 
       // Channel exists: only edit what changed.
       const patch: Record<string, unknown> = {};
-      if ((found.parent_id ?? null) !== cat.id) patch.parent_id = cat.id;
-      if (ch.type === 0 && ch.topic !== undefined && (found.topic ?? "") !== ch.topic) patch.topic = ch.topic;
-      if (ch.type === 2 && ch.user_limit !== undefined && (found.user_limit ?? 0) !== ch.user_limit) patch.user_limit = ch.user_limit;
+      if ((found.parent_id ?? null) !== cat.id) patch["parent_id"] = cat.id;
+      if (ch.type === 0 && ch.topic !== undefined && (found.topic ?? "") !== ch.topic) patch["topic"] = ch.topic;
+      if (ch.type === 2 && ch.user_limit !== undefined && (found.user_limit ?? 0) !== ch.user_limit) patch["user_limit"] = ch.user_limit;
 
       if (Object.keys(patch).length > 0) {
         await dc(`/channels/${found.id}`, { method: "PATCH", body: JSON.stringify(patch) });
