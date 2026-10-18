@@ -244,7 +244,7 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
   logs.push(`${created} criados, ${updated} editados, ${skipped} já estavam certos.`);
   if (rulesChannel && (rulesChannelIsNew || purge)) {
     await postRules(rulesChannel);
-    logs.push("Regras publicadas em ・𝗿𝗲𝗴𝗿𝗮𝘀.");
+    logs.push("Regras publicadas em ・ʀᴇɢʀᴀs.");
   }
   return { created, updated, skipped, logs };
 }
