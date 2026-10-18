@@ -53,7 +53,7 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
           const work = (async () => {
             try {
               const r = await loadTemplate(i.guild_id, false);
-              await followup(`Template **dog_cyb** aplicado: ${r.created} canais criados e regras publicadas.`);
+              await followup(`Template **dog_cyb** aplicado: ${r.created} criados, ${r.updated} editados, ${r.skipped} já estavam certos.`);
             } catch (e) {
               await followup(`Falha ao aplicar template: ${(e as Error).message}`).catch(() => {});
             }
