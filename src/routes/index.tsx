@@ -280,7 +280,7 @@ function Actions({ guild, password, busy, run, onDone }: { guild: Guild; passwor
           </Button>
           <Button variant="secondary" disabled={!!busy || !channelId}
             onClick={() => run("rules", async () => { await publishRules({ data: { password, channelId } }); return "Regras publicadas."; })}>
-            <ScrollText /> Publicar 30 regras
+            <ScrollText /> Publicar regras
           </Button>
         </div>
       </div>

@@ -33,7 +33,7 @@ export async function dc<T = any>(path: string, init: RequestInit = {}, attempt 
 export const SLASH_COMMANDS = [
   {
     name: "load",
-    description: "Carrega o template do servidor",
+    description: "Carrega o template do servidor (só o dono)",
     default_member_permissions: "8",
     dm_permission: false,
     options: [
@@ -50,7 +50,7 @@ export const SLASH_COMMANDS = [
   },
   {
     name: "regras",
-    description: "Publica as regras neste canal",
+    description: "Publica as regras neste canal (só o dono)",
     default_member_permissions: "8",
     dm_permission: false,
   },
@@ -69,65 +69,111 @@ export async function registerCommands(guildId?: string) {
   return { appId };
 }
 
+export async function isGuildOwner(guildId: string, userId: string) {
+  const guild = await dc<{ owner_id: string }>(`/guilds/${guildId}`);
+  return guild.owner_id === userId;
+}
+
 export function rulesEmbeds() {
-  const toField = (r: (typeof PANELEIRO_RULES_LIST)[number]) => ({
-    name: r.title.slice(0, 256),
-    value: `${r.description}\n*Punição: ${r.punishment}*`.slice(0, 1024),
-  });
   const total = PANELEIRO_RULES_LIST.length;
   return [
     {
-      title: "CÓDIGO PENAL PANELEIRO [DOG_CYB] • PARTE 1/2",
-      description: "Regulamento oficial do covil.",
+      title: "CÓDIGO PENAL PANELEIRO [DOG_CYB]",
+      description: "Regulamento oficial do covil. Leu, concordou.",
       color: 0x5865f2,
-      fields: PANELEIRO_RULES_LIST.slice(0, 15).map(toField),
-      footer: { text: `PanelBot • regras 1 a 15 de ${total}` },
-    },
-    {
-      title: "CÓDIGO PENAL PANELEIRO [DOG_CYB] • PARTE 2/2",
-      description: "Diretrizes de voz, shitpost e segurança.",
-      color: 0x9b59b6,
-      fields: PANELEIRO_RULES_LIST.slice(15, 30).map(toField),
-      footer: { text: `PanelBot • regras 16 a ${total} de ${total}` },
+      fields: PANELEIRO_RULES_LIST.map((r) => ({
+        name: r.title.slice(0, 256),
+        value: `${r.description}\n*Punição: ${r.punishment}*`.slice(0, 1024),
+      })),
+      footer: { text: `PanelBot • ${total} regras` },
     },
   ];
 }
 
 export async function postRules(channelId: string) {
-  // Discord limits total embed size to 6000 chars per message, so send one per message.
   for (const embed of rulesEmbeds()) {
     await dc(`/channels/${channelId}/messages`, { method: "POST", body: JSON.stringify({ embeds: [embed] }) });
   }
 }
 
-const TEMPLATE = [
+interface TemplateChannel {
+  name: string;
+  type: number;
+  topic?: string;
+  user_limit?: number;
+  rules?: boolean;
+}
+
+const TEMPLATE: { category: string; channels: TemplateChannel[] }[] = [
   {
-    category: "・ 𝐈𝐍𝐅𝐎𝐑𝐌𝐀𝐂̧𝐎̃𝐄𝐒 ・",
+    category: "・ 𝐈𝐍𝐅𝐎 ・",
     channels: [
-      { name: "・ 𝗲𝗻𝘁𝗿𝗮𝗱𝗮", type: 0, topic: "Boas-vindas" },
-      { name: "・ 𝘀𝗮𝗶𝗻𝗱𝗼", type: 0, topic: "Saídas" },
-      { name: "・ 𝗿𝗲𝗴𝗿𝗮𝘀", type: 0, topic: "Regras da casa. Apenas leitura.", rules: true },
-      { name: "・ 𝗮𝗻𝘂𝗻𝗰𝗶𝗼𝘀", type: 0, topic: "Avisos da administração." },
-      { name: "・ 𝗽𝗹𝗮𝗾𝘂𝗶𝗻𝗵𝗮𝘀", type: 0, topic: "Pedidos de plaquinhas." },
+      { name: "・𝗿𝗲𝗴𝗿𝗮𝘀", type: 0, topic: "Regras da casa. Apenas leitura.", rules: true },
+      { name: "・𝗮𝗻𝘂𝗻𝗰𝗶𝗼𝘀", type: 0, topic: "Avisos da administração." },
+      { name: "・𝗽𝗹𝗮𝗾𝘂𝗶𝗻𝗵𝗮𝘀", type: 0, topic: "Pedidos de plaquinhas." },
     ],
   },
   {
-    category: "・ 𝐂𝐇𝐀𝐓 𝐆𝐄𝐑𝐀𝐋 ・",
-    channels: ["・ 𝘀𝗺𝘀", "・ 𝗺𝗶𝗱𝗶𝗮𝘀", "・ 𝗯𝘂𝘀𝗰𝗮𝗿-𝗶𝗽", "・ 𝗰𝗼𝗺𝗮𝗻𝗱𝗼𝘀", "・ 𝗱𝗶𝘃𝘂𝗹𝗴𝗮𝗰𝗮𝗼"].map((name) => ({ name, type: 0 })),
+    category: "・ 𝐂𝐇𝐀𝐓 ・",
+    channels: [
+      { name: "・𝘀𝗺𝘀", type: 0 },
+      { name: "・𝗺𝗶𝗱𝗶𝗮𝘀", type: 0 },
+      { name: "・𝗯𝘂𝘀𝗰𝗮𝗿-𝗶𝗽", type: 0 },
+      { name: "・𝗰𝗼𝗺𝗮𝗻𝗱𝗼𝘀", type: 0 },
+      { name: "・𝗱𝗶𝘃𝘂𝗹𝗴𝗮𝗰𝗮𝗼", type: 0 },
+    ],
   },
   {
-    category: "・ 𝐕𝐎𝐙 & 𝐂𝐀𝐋𝐋𝐒 ・",
+    category: "・ 𝐃𝐔𝐎𝐒 ・",
     channels: [
-      ["・ 𝗱𝘂𝗼 𝟭", 2], ["・ 𝗱𝘂𝗼 𝟮", 2], ["・ 𝗰𝗮𝗹𝗹 𝟭", 0], ["・ 𝗰𝗮𝗹𝗹 𝟮", 0], ["・ 𝗴𝗳 𝟭", 2],
-      ["・ 𝗴𝗳 𝟮", 2], ["・ 𝗺𝘂𝘀𝗶𝗰𝗮 𝟭", 0], ["・ 𝗺𝘂𝘀𝗶𝗰𝗮 𝟮", 0], ["・ 𝗮𝗳𝗸 𝟭", 0], ["・ 𝗮𝗳𝗸 𝟮", 0],
-    ].map(([name, limit]) => ({ name: name as string, type: 2, user_limit: limit as number })),
+      { name: "・𝗱𝘂𝗼-𝟭", type: 2, user_limit: 2 },
+      { name: "・𝗱𝘂𝗼-𝟮", type: 2, user_limit: 2 },
+    ],
+  },
+  {
+    category: "・ 𝐂𝐀𝐋𝐋𝐒 ・",
+    channels: [
+      { name: "・𝗰𝗮𝗹𝗹-𝟭", type: 2 },
+      { name: "・𝗰𝗮𝗹𝗹-𝟮", type: 2 },
+    ],
+  },
+  {
+    category: "・ 𝐆𝐅 ・",
+    channels: [
+      { name: "・𝗴𝗳-𝟭", type: 2, user_limit: 2 },
+      { name: "・𝗴𝗳-𝟮", type: 2, user_limit: 2 },
+    ],
+  },
+  {
+    category: "・ 𝐌𝐔𝐒𝐈𝐂𝐀 ・",
+    channels: [
+      { name: "・𝗺𝘂𝘀𝗶𝗰𝗮-𝟭", type: 2 },
+      { name: "・𝗺𝘂𝘀𝗶𝗰𝗮-𝟮", type: 2 },
+    ],
+  },
+  {
+    category: "・ 𝐀𝐅𝐊 ・",
+    channels: [
+      { name: "・𝗮𝗳𝗸-𝟭", type: 2 },
+      { name: "・𝗮𝗳𝗸-𝟮", type: 2 },
+    ],
   },
 ];
 
+interface ExistingChannel {
+  id: string;
+  name: string;
+  type: number;
+  parent_id?: string | null;
+  topic?: string | null;
+  user_limit?: number;
+}
+
 export async function loadTemplate(guildId: string, purge: boolean, keepChannelId?: string) {
   const logs: string[] = [];
+  let existing = await dc<ExistingChannel[]>(`/guilds/${guildId}/channels`);
+
   if (purge) {
-    const existing = await dc<{ id: string }[]>(`/guilds/${guildId}/channels`);
     let removed = 0;
     for (const ch of existing) {
       if (ch.id === keepChannelId) continue;
@@ -135,35 +181,72 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
         await dc(`/channels/${ch.id}`, { method: "DELETE" });
         removed++;
       } catch (e) {
-        logs.push(`Não consegui apagar ${ch.id}: ${(e as Error).message}`);
+        logs.push(`Não consegui apagar ${ch.name}: ${(e as Error).message}`);
       }
     }
     logs.push(`${removed} canais apagados.`);
+    existing = existing.filter((c) => c.id === keepChannelId);
   }
-  let rulesChannel: string | undefined;
+
   let created = 0;
+  let updated = 0;
+  let skipped = 0;
+  let rulesChannel: string | undefined;
+  let rulesChannelIsNew = false;
+
   for (const block of TEMPLATE) {
-    const cat = await dc<{ id: string }>(`/guilds/${guildId}/channels`, {
-      method: "POST",
-      body: JSON.stringify({ name: block.category, type: 4 }),
-    });
-    created++;
-    for (const ch of block.channels as any[]) {
-      const { rules, ...body } = ch;
-      const c = await dc<{ id: string }>(`/guilds/${guildId}/channels`, {
+    // Find or create the category.
+    let cat = existing.find((c) => c.type === 4 && c.name === block.category);
+    if (!cat) {
+      cat = await dc<ExistingChannel>(`/guilds/${guildId}/channels`, {
         method: "POST",
-        body: JSON.stringify({ ...body, parent_id: cat.id }),
+        body: JSON.stringify({ name: block.category, type: 4 }),
       });
+      existing.push(cat);
       created++;
-      if (rules) rulesChannel = c.id;
+      logs.push(`Categoria criada: ${block.category}`);
+    }
+
+    for (const ch of block.channels) {
+      const { rules, ...wanted } = ch;
+      const found = existing.find((c) => c.type === ch.type && c.name === ch.name);
+
+      if (!found) {
+        const c = await dc<ExistingChannel>(`/guilds/${guildId}/channels`, {
+          method: "POST",
+          body: JSON.stringify({ ...wanted, parent_id: cat.id }),
+        });
+        existing.push({ ...c, parent_id: cat.id });
+        created++;
+        if (rules) {
+          rulesChannel = c.id;
+          rulesChannelIsNew = true;
+        }
+        continue;
+      }
+
+      // Channel exists: only edit what changed.
+      const patch: Record<string, unknown> = {};
+      if ((found.parent_id ?? null) !== cat.id) patch["parent_id"] = cat.id;
+      if (ch.type === 0 && ch.topic !== undefined && (found.topic ?? "") !== ch.topic) patch["topic"] = ch.topic;
+      if (ch.type === 2 && ch.user_limit !== undefined && (found.user_limit ?? 0) !== ch.user_limit) patch["user_limit"] = ch.user_limit;
+
+      if (Object.keys(patch).length > 0) {
+        await dc(`/channels/${found.id}`, { method: "PATCH", body: JSON.stringify(patch) });
+        updated++;
+      } else {
+        skipped++;
+      }
+      if (rules) rulesChannel = found.id;
     }
   }
-  logs.push(`${created} canais/categorias criados.`);
-  if (rulesChannel) {
+
+  logs.push(`${created} criados, ${updated} editados, ${skipped} já estavam certos.`);
+  if (rulesChannel && (rulesChannelIsNew || purge)) {
     await postRules(rulesChannel);
-    logs.push("Regras publicadas em ・ 𝗿𝗲𝗴𝗿𝗮𝘀.");
+    logs.push("Regras publicadas em ・𝗿𝗲𝗴𝗿𝗮𝘀.");
   }
-  return { created, logs };
+  return { created, updated, skipped, logs };
 }
 
 function hexToBytes(hex: string) {
