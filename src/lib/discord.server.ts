@@ -106,56 +106,56 @@ interface TemplateChannel {
 
 const TEMPLATE: { category: string; channels: TemplateChannel[] }[] = [
   {
-    category: "・ 𝐈𝐍𝐅𝐎 ・",
+    category: "✦ ɪɴꜰᴏ",
     channels: [
-      { name: "・𝗿𝗲𝗴𝗿𝗮𝘀", type: 0, topic: "Regras da casa. Apenas leitura.", rules: true },
-      { name: "・𝗮𝗻𝘂𝗻𝗰𝗶𝗼𝘀", type: 0, topic: "Avisos da administração." },
-      { name: "・𝗽𝗹𝗮𝗾𝘂𝗶𝗻𝗵𝗮𝘀", type: 0, topic: "Pedidos de plaquinhas." },
+      { name: "・ʀᴇɢʀᴀs", type: 0, topic: "Regras da casa. Apenas leitura.", rules: true },
+      { name: "・ᴀɴᴜɴᴄɪᴏs", type: 0, topic: "Avisos da administração." },
+      { name: "・ᴘʟᴀǫᴜɪɴʜᴀs", type: 0, topic: "Pedidos de plaquinhas." },
     ],
   },
   {
-    category: "・ 𝐂𝐇𝐀𝐓 ・",
+    category: "✦ ᴄʜᴀᴛ",
     channels: [
-      { name: "・𝘀𝗺𝘀", type: 0 },
-      { name: "・𝗺𝗶𝗱𝗶𝗮𝘀", type: 0 },
-      { name: "・𝗯𝘂𝘀𝗰𝗮𝗿-𝗶𝗽", type: 0 },
-      { name: "・𝗰𝗼𝗺𝗮𝗻𝗱𝗼𝘀", type: 0 },
-      { name: "・𝗱𝗶𝘃𝘂𝗹𝗴𝗮𝗰𝗮𝗼", type: 0 },
+      { name: "・ᴄʜᴀᴛ", type: 0 },
+      { name: "・ᴍɪᴅɪᴀs", type: 0 },
+      { name: "・ʙᴜsᴄᴀʀ-ɪᴘ", type: 0 },
+      { name: "・ᴄᴏᴍᴀɴᴅᴏs", type: 0 },
+      { name: "・ᴅɪᴠᴜʟɢᴀᴄᴀᴏ", type: 0 },
     ],
   },
   {
-    category: "・ 𝐃𝐔𝐎𝐒 ・",
+    category: "✦ ᴅᴜᴏs",
     channels: [
-      { name: "・𝗱𝘂𝗼-𝟭", type: 2, user_limit: 2 },
-      { name: "・𝗱𝘂𝗼-𝟮", type: 2, user_limit: 2 },
+      { name: "⏐ᴅᴜᴏ・ɪ", type: 2, user_limit: 2 },
+      { name: "⏐ᴅᴜᴏ・ɪɪ", type: 2, user_limit: 2 },
     ],
   },
   {
-    category: "・ 𝐂𝐀𝐋𝐋𝐒 ・",
+    category: "✦ ᴄᴀʟʟs",
     channels: [
-      { name: "・𝗰𝗮𝗹𝗹-𝟭", type: 2 },
-      { name: "・𝗰𝗮𝗹𝗹-𝟮", type: 2 },
+      { name: "⏐ᴄᴀʟʟ・ɪ", type: 2 },
+      { name: "⏐ᴄᴀʟʟ・ɪɪ", type: 2 },
     ],
   },
   {
-    category: "・ 𝐆𝐅 ・",
+    category: "✦ ɢꜰ",
     channels: [
-      { name: "・𝗴𝗳-𝟭", type: 2, user_limit: 2 },
-      { name: "・𝗴𝗳-𝟮", type: 2, user_limit: 2 },
+      { name: "⏐ɢꜰ・ɪ", type: 2, user_limit: 2 },
+      { name: "⏐ɢꜰ・ɪɪ", type: 2, user_limit: 2 },
     ],
   },
   {
-    category: "・ 𝐌𝐔𝐒𝐈𝐂𝐀 ・",
+    category: "✦ ᴍᴜsɪᴄᴀ",
     channels: [
-      { name: "・𝗺𝘂𝘀𝗶𝗰𝗮-𝟭", type: 2 },
-      { name: "・𝗺𝘂𝘀𝗶𝗰𝗮-𝟮", type: 2 },
+      { name: "⏐ᴍᴜsɪᴄᴀ・ɪ", type: 2 },
+      { name: "⏐ᴍᴜsɪᴄᴀ・ɪɪ", type: 2 },
     ],
   },
   {
-    category: "・ 𝐀𝐅𝐊 ・",
+    category: "✦ ᴀꜰᴋ",
     channels: [
-      { name: "・𝗮𝗳𝗸-𝟭", type: 2 },
-      { name: "・𝗮𝗳𝗸-𝟮", type: 2 },
+      { name: "⏐ᴀꜰᴋ・ɪ", type: 2 },
+      { name: "⏐ᴀꜰᴋ・ɪɪ", type: 2 },
     ],
   },
 ];
