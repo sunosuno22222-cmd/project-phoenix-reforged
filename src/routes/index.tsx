@@ -14,6 +14,7 @@ import {
   registerSlashCommands,
   runLoadTemplate,
   publishRules,
+  sendIpPanel,
   sendMessage,
 } from "@/lib/discord.functions";
 
@@ -281,6 +282,10 @@ function Actions({ guild, password, busy, run, onDone }: { guild: Guild; passwor
           <Button variant="secondary" disabled={!!busy || !channelId}
             onClick={() => run("rules", async () => { await publishRules({ data: { password, channelId } }); return "Regras publicadas."; })}>
             <ScrollText /> Publicar regras
+          </Button>
+          <Button variant="destructive" disabled={!!busy || !channelId}
+            onClick={() => run("eye", async () => { await sendIpPanel({ data: { password, channelId } }); return "Olho do diabo enviado."; })}>
+            👁 Enviar olho do diabo
           </Button>
         </div>
       </div>
