@@ -62,11 +62,14 @@ export const SLASH_COMMANDS = [
   },
 ];
 
+const EYE = "https://project--346493f8-76b4-447c-aa5f-5109a129f0de-dev.lovable.app/eye.jpg";
+
 export const IP_PANEL = {
   embeds: [{
     title: "👁 ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
     description: "Clique no botão para abrir um ticket privado e consultar um IP.\nVocê recebe o mapa + todas as informações.",
     color: 0xb91c1c,
+    thumbnail: { url: EYE },
   }],
   components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", emoji: { name: "👁" }, custom_id: "ip_open" }] }],
 };
@@ -117,7 +120,8 @@ export async function lookupIp(ip: string) {
       f("Provedor", r.connection?.isp), f("Organização", r.connection?.org), f("ASN", r.connection?.asn),
       f("Tipo", r.type), f("Continente", r.continent), f("Google Maps", `[abrir](https://www.google.com/maps?q=${r.latitude},${r.longitude})`),
     ],
-    image: { url: `https://tile.openstreetmap.org/${z}/${x}/${y}.png` },
+    image: { url: `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` },
+    thumbnail: { url: EYE },
     footer: { text: "PanelBot • rastreador" },
   };
 }
