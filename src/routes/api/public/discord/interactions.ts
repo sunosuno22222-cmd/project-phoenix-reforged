@@ -96,6 +96,8 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
           return json({ type: 5 });
         }
 
+        if (name === "ip-embed") return json({ type: 4, data: IP_PANEL });
+
         return json({ type: 4, data: { content: "Comando desconhecido.", flags: 64 } });
       },
     },
