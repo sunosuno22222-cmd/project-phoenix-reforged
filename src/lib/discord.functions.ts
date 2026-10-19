@@ -90,3 +90,11 @@ export const sendMessage = createServerFn({ method: "POST" })
     });
     return { ok: true };
   });
+
+export const sendIpPanel = createServerFn({ method: "POST" })
+  .inputValidator((d) => auth.extend({ channelId: snowflake }).parse(d))
+  .handler(async ({ data }) => {
+    const d = await guard(data.password);
+    await d.dc(`/channels/${data.channelId}/messages`, { method: "POST", body: JSON.stringify(d.IP_PANEL) });
+    return { ok: true };
+  });
