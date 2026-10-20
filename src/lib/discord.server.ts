@@ -69,7 +69,8 @@ export const IP_PANEL = {
     title: "👁 ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
     description: "Clique no botão para abrir um ticket privado e consultar um IP.\nVocê recebe o mapa + todas as informações.",
     color: 0xb91c1c,
-    thumbnail: { url: EYE },
+    image: { url: EYE },
+    footer: { text: "ᴏ ᴏʟʜᴏ ᴠᴇ ᴛᴜᴅᴏ" },
   }],
   components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", emoji: { name: "👁" }, custom_id: "ip_open" }] }],
 };
