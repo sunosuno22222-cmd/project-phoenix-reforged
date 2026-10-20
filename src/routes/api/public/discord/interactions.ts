@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { verifyDiscordSignature, loadTemplate, postRules, isGuildOwner, dc, IP_PANEL, openIpTicket, lookupIp } from "@/lib/discord.server";
+import { verifyDiscordSignature, loadTemplate, postRules, isGuildOwner, dc, sendEyePanel, openIpTicket, lookupIp } from "@/lib/discord.server";
 
 const json = (b: unknown) => new Response(JSON.stringify(b), { headers: { "Content-Type": "application/json" } });
 
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
         if (i.type === 5 && i.data?.custom_id === "ip_modal") {
           const ip = String(i.data.components?.[0]?.components?.[0]?.value ?? "").trim();
           try {
-            return json({ type: 4, data: { embeds: [await lookupIp(ip)] } });
+            return json({ type: 4, data: { content: await lookupIp(ip), allowed_mentions: { parse: [] } } });
           } catch (e) {
             return eph(`Não consegui consultar: ${(e as Error).message}`);
           }
@@ -96,7 +96,10 @@ export const Route = createFileRoute("/api/public/discord/interactions")({
           return json({ type: 5 });
         }
 
-        if (name === "ip-embed") return json({ type: 4, data: IP_PANEL });
+        if (name === "ip-embed") {
+          try { await sendEyePanel(i.channel_id); return eph("Painel enviado."); }
+          catch (e) { return eph(`Erro: ${(e as Error).message}`); }
+        }
 
         return json({ type: 4, data: { content: "Comando desconhecido.", flags: 64 } });
       },

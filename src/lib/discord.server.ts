@@ -62,18 +62,38 @@ export const SLASH_COMMANDS = [
   },
 ];
 
-const EYE = "https://project--346493f8-76b4-447c-aa5f-5109a129f0de-dev.lovable.app/eye.gif";
+import eyeGif from "@/assets/eye.gif?inline";
+
+function eyeBlob() {
+  const b64 = eyeGif.split(",")[1];
+  const bin = atob(b64);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return new Blob([out], { type: "image/gif" });
+}
 
 export const IP_PANEL = {
   embeds: [{
-    title: "👁 ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
-    description: "Clique no botão para abrir um ticket privado e consultar um IP.\nVocê recebe o mapa + todas as informações.",
+    title: "ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
+    description: "Clique no botão para abrir um ticket privado e consultar um IP.",
     color: 0xb91c1c,
-    image: { url: EYE },
+    image: { url: "attachment://eye.gif" },
     footer: { text: "ᴏ ᴏʟʜᴏ ᴠᴇ ᴛᴜᴅᴏ" },
   }],
-  components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", emoji: { name: "👁" }, custom_id: "ip_open" }] }],
+  components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", custom_id: "ip_open" }] }],
 };
+
+export async function sendEyePanel(channelId: string) {
+  const fd = new FormData();
+  fd.append("payload_json", JSON.stringify({ ...IP_PANEL, attachments: [{ id: 0, filename: "eye.gif" }] }));
+  fd.append("files[0]", eyeBlob(), "eye.gif");
+  const res = await fetch(`${API}/channels/${channelId}/messages`, {
+    method: "POST",
+    headers: { Authorization: `Bot ${botToken()}` },
+    body: fd,
+  });
+  if (!res.ok) throw new Error(`Discord ${res.status}: ${(await res.text()).slice(0, 300)}`);
+}
 
 export async function openIpTicket(guildId: string, userId: string, username: string) {
   const me = await dc<{ id: string }>("/users/@me");
@@ -93,7 +113,7 @@ export async function openIpTicket(guildId: string, userId: string, username: st
     method: "POST",
     body: JSON.stringify({
       content: `<@${userId}>`,
-      embeds: [{ title: "👁 ᴛɪᴄᴋᴇᴛ ᴅᴇ ɪᴘ", description: "Clique em **Digitar IP** e informe o endereço.", color: 0xb91c1c }],
+      embeds: [{ title: "ᴛɪᴄᴋᴇᴛ ᴅᴇ ɪᴘ", description: "Clique em **Digitar IP** e informe o endereço.", color: 0xb91c1c }],
       components: [{ type: 1, components: [
         { type: 2, style: 1, label: "Digitar IP", custom_id: "ip_input" },
         { type: 2, style: 2, label: "Fechar ticket", custom_id: "ip_close" },
@@ -124,25 +144,13 @@ async function fetchIp(ip: string): Promise<any> {
 
 export async function lookupIp(ip: string) {
   const r = await fetchIp(ip);
-  const z = 10;
-  const n = 2 ** z;
-  const x = Math.floor(((r.longitude + 180) / 360) * n);
-  const lat = (r.latitude * Math.PI) / 180;
-  const y = Math.floor(((1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2) * n);
-  const f = (name: string, value: unknown) => ({ name, value: String(value || "—").slice(0, 1024), inline: true });
-  return {
-    title: `👁 ${r.ip}`,
-    color: 0xb91c1c,
-    fields: [
-      f("País", `${r.flag?.emoji ?? ""} ${r.country}`), f("Região", r.region), f("Cidade", r.city),
-      f("CEP", r.postal), f("Coordenadas", `${r.latitude}, ${r.longitude}`), f("Fuso", r.timezone?.id),
-      f("Provedor", r.connection?.isp), f("Organização", r.connection?.org), f("ASN", r.connection?.asn),
-      f("Tipo", r.type), f("Continente", r.continent), f("Google Maps", `[abrir](https://www.google.com/maps?q=${r.latitude},${r.longitude})`),
-    ],
-    image: { url: `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}@2x.png` },
-    thumbnail: { url: EYE },
-    footer: { text: "PanelBot • rastreador" },
-  };
+  const f = (name: string, value: unknown) => `## **${name}:**\n${String(value || "—")}`;
+  return [
+    f("IP", r.ip), f("País", r.country), f("Região", r.region), f("Cidade", r.city),
+    f("CEP", r.postal), f("Coordenadas", `${r.latitude}, ${r.longitude}`), f("Fuso", r.timezone?.id),
+    f("Provedor", r.connection?.isp), f("Organização", r.connection?.org), f("ASN", r.connection?.asn),
+    f("Tipo", r.type), f("Continente", r.continent),
+  ].join("\n").slice(0, 2000);
 }
 
 export async function registerCommands(guildId?: string) {
