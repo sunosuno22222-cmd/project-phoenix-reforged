@@ -62,14 +62,15 @@ export const SLASH_COMMANDS = [
   },
 ];
 
-const EYE = "https://project--346493f8-76b4-447c-aa5f-5109a129f0de-dev.lovable.app/eye.jpg";
+const EYE = "https://project--346493f8-76b4-447c-aa5f-5109a129f0de-dev.lovable.app/eye.gif";
 
 export const IP_PANEL = {
   embeds: [{
     title: "👁 ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
     description: "Clique no botão para abrir um ticket privado e consultar um IP.\nVocê recebe o mapa + todas as informações.",
     color: 0xb91c1c,
-    thumbnail: { url: EYE },
+    image: { url: EYE },
+    footer: { text: "ᴏ ᴏʟʜᴏ ᴠᴇ ᴛᴜᴅᴏ" },
   }],
   components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", emoji: { name: "👁" }, custom_id: "ip_open" }] }],
 };
@@ -102,9 +103,27 @@ export async function openIpTicket(guildId: string, userId: string, username: st
   return ch.id;
 }
 
+async function fetchIp(ip: string): Promise<any> {
+  const e = encodeURIComponent(ip);
+  const get = async (u: string) => (await fetch(u, { headers: { "User-Agent": "PanelBot/1.0" } })).json() as Promise<any>;
+  const providers: (() => Promise<any>)[] = [
+    async () => { const r = await get(`https://ipwho.is/${e}`); if (!r.success) throw new Error(r.message); return r; },
+    async () => { const r = await get(`https://freeipapi.com/api/json/${e}`); if (!r.latitude && !r.countryName) throw new Error("x");
+      return { ip: r.ipAddress, country: r.countryName, region: r.regionName, city: r.cityName, postal: r.zipCode, latitude: r.latitude, longitude: r.longitude, timezone: { id: r.timeZones?.[0] ?? r.timeZone }, connection: {}, type: `IPv${r.ipVersion}`, continent: r.continent }; },
+    async () => { const r = await get(`https://ipapi.co/${e}/json/`); if (r.error) throw new Error(r.reason);
+      return { ip: r.ip, country: r.country_name, region: r.region, city: r.city, postal: r.postal, latitude: r.latitude, longitude: r.longitude, timezone: { id: r.timezone }, connection: { isp: r.org, org: r.org, asn: r.asn }, type: r.version, continent: r.continent_code }; },
+    async () => { const r = await get(`http://ip-api.com/json/${e}?fields=66846719`); if (r.status !== "success") throw new Error(r.message);
+      return { ip: r.query, country: r.country, region: r.regionName, city: r.city, postal: r.zip, latitude: r.lat, longitude: r.lon, timezone: { id: r.timezone }, connection: { isp: r.isp, org: r.org, asn: r.as }, type: r.mobile ? "Móvel" : "Fixo", continent: r.continent }; },
+  ];
+  let last = "IP inválido";
+  for (const p of providers) {
+    try { const r = await p(); if (typeof r.latitude === "number") return r; } catch (err) { last = (err as Error).message || last; }
+  }
+  throw new Error(last);
+}
+
 export async function lookupIp(ip: string) {
-  const r = (await (await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`)).json()) as any;
-  if (!r.success) throw new Error(r.message || "IP inválido");
+  const r = await fetchIp(ip);
   const z = 10;
   const n = 2 ** z;
   const x = Math.floor(((r.longitude + 180) / 360) * n);
