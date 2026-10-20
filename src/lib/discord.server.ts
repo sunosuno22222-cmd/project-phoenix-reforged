@@ -65,7 +65,7 @@ export const SLASH_COMMANDS = [
 import eyeGif from "@/assets/eye.gif?inline";
 
 function eyeBlob() {
-  const b64 = eyeGif.split(",")[1];
+  const b64 = eyeGif.split(",")[1] ?? "";
   const bin = atob(b64);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
