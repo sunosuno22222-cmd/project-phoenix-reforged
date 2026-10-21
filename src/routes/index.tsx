@@ -284,8 +284,8 @@ function Actions({ guild, password, busy, run, onDone }: { guild: Guild; passwor
             <ScrollText /> Publicar regras
           </Button>
           <Button variant="destructive" disabled={!!busy || !channelId}
-            onClick={() => run("eye", async () => { await sendIpPanel({ data: { password, channelId } }); return "Olho do diabo enviado."; })}>
-            👁 Enviar olho do diabo
+            onClick={() => run("eye", async () => { await sendIpPanel({ data: { password, channelId } }); return "Olho do Inferno enviado."; })}>
+            Enviar Olho do Inferno
           </Button>
         </div>
       </div>

@@ -74,7 +74,7 @@ function eyeBlob() {
 
 export const IP_PANEL = {
   embeds: [{
-    title: "ʀᴀsᴛʀᴇᴀᴅᴏʀ ᴅᴇ ɪᴘ",
+    title: "ᴏʟʜᴏ ᴅᴏ ɪɴꜰᴇʀɴᴏ",
     description: "Clique no botão para abrir um ticket privado e consultar um IP.",
     color: 0xb91c1c,
     image: { url: "attachment://eye.gif" },
@@ -142,11 +142,30 @@ async function fetchIp(ip: string): Promise<any> {
   throw new Error(last);
 }
 
+async function extras(r: any) {
+  const j = async (u: string) => { try { const x = await fetch(u, { headers: { "User-Agent": "OlhoDoInferno/1.0", "Accept-Language": "pt-BR" } }); return x.ok ? await x.json() as any : null; } catch { return null; } };
+  const [geo, ipapi, who] = await Promise.all([
+    j(`https://nominatim.openstreetmap.org/reverse?format=json&zoom=16&lat=${r.latitude}&lon=${r.longitude}`),
+    j(`http://ip-api.com/json/${encodeURIComponent(r.ip)}?fields=district`),
+    j(`https://ipwho.is/${encodeURIComponent(r.ip)}`),
+  ]);
+  const a = geo?.address ?? {};
+  const bairro = ipapi?.district || a.suburb || a.neighbourhood || a.quarter || a.city_district || a.village || a.town;
+  let capital = r.capital || who?.capital;
+  if (!capital) {
+    const code = who?.country_code || a.country_code;
+    const c = code ? await j(`https://restcountries.com/v3.1/alpha/${code}?fields=capital`) : null;
+    capital = c?.capital?.[0];
+  }
+  return { bairro, capital };
+}
+
 export async function lookupIp(ip: string) {
   const r = await fetchIp(ip);
+  const x = await extras(r);
   const f = (name: string, value: unknown) => `## **${name}:**\n${String(value || "—")}`;
   return [
-    f("IP", r.ip), f("País", r.country), f("Região", r.region), f("Cidade", r.city),
+    f("IP", r.ip), f("País", r.country), f("Região", r.region), f("Cidade", r.city), f("Bairro", x.bairro), f("Capital", x.capital),
     f("CEP", r.postal), f("Coordenadas", `${r.latitude}, ${r.longitude}`), f("Fuso", r.timezone?.id),
     f("Provedor", r.connection?.isp), f("Organização", r.connection?.org), f("ASN", r.connection?.asn),
     f("Tipo", r.type), f("Continente", r.continent),
