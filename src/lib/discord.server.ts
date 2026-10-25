@@ -191,6 +191,33 @@ export async function isGuildOwner(guildId: string, userId: string) {
   return guild.owner_id === userId;
 }
 
+export async function assignMemberRole(guildId: string, userId: string, roleId: string) {
+  const roles = await dc<{ id: string; name: string; managed: boolean }[]>(`/guilds/${guildId}/roles`);
+  const role = roles.find((r) => r.id === roleId);
+  if (!role || role.id === guildId || role.managed) {
+    throw new Error("Escolha um cargo válido; cargos de bots e @everyone não podem ser atribuídos.");
+  }
+  let member: { roles: string[]; user: { username: string } };
+  try {
+    member = await dc(`/guilds/${guildId}/members/${userId}`);
+  } catch (e) {
+    if ((e as Error).message.startsWith("Discord 404:")) throw new Error("Essa pessoa não está neste servidor ou o ID está incorreto.");
+    throw e;
+  }
+  if (member.roles.includes(roleId)) return { roleName: role.name, username: member.user.username, alreadyAssigned: true };
+  try {
+    await dc(`/guilds/${guildId}/members/${userId}/roles/${roleId}`, { method: "PUT" });
+  } catch (e) {
+    if ((e as Error).message.startsWith("Discord 403:")) {
+      throw new Error("O bot precisa de Gerenciar Cargos e seu cargo deve estar acima do cargo escolhido no Discord.");
+    }
+    throw e;
+  }
+  const confirmed = await dc<{ roles: string[] }>(`/guilds/${guildId}/members/${userId}`);
+  if (!confirmed.roles.includes(roleId)) throw new Error("O Discord ainda não confirmou a atribuição. Atualize e confira antes de tentar novamente.");
+  return { roleName: role.name, username: member.user.username, alreadyAssigned: false };
+}
+
 export function rulesEmbeds() {
   const total = PANELEIRO_RULES_LIST.length;
   return [

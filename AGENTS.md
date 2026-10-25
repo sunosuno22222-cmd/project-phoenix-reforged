@@ -10,3 +10,4 @@
 <!-- LOVABLE:END -->
 
 - Keep Discord template definitions and legacy name aliases in the browser-safe discord-template module; the server reconciler reuses channel IDs to preserve messages during template updates.
+- Discord role assignment uses the password-guarded server function and Discord membership/role checks; confirm the role through a fresh member read, leaving hierarchy enforcement to Discord.
