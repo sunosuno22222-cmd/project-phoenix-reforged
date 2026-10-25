@@ -16,6 +16,7 @@ import {
   publishRules,
   sendIpPanel,
   sendMessage,
+  assignRole,
 } from "@/lib/discord.functions";
 
 export const Route = createFileRoute("/")({
@@ -202,6 +203,10 @@ function Dashboard({ overview, password, onRefresh, onLogout }: { overview: Over
                 <Actions guild={guild} password={password} busy={busy} run={run} onDone={() => refreshGuild(guild.id)} />
               </Card>
 
+              <Card title="Atribuir cargo" icon={<Shield className="h-4 w-4" />}>
+                <RoleAssignment key={guild.id} guild={guild} password={password} busy={busy} run={run} />
+              </Card>
+
               <Card title="Console" icon={<Terminal className="h-4 w-4" />}>
                 <pre className="max-h-56 overflow-auto rounded-lg bg-background p-3 font-mono text-xs text-muted-foreground">
                   {logs.length ? logs.join("\n") : "Nenhuma ação ainda."}
@@ -312,6 +317,41 @@ function ChannelTree({ channels }: { channels: Guild["channels"] }) {
         </div>
       ))}
     </div>
+  );
+}
+
+function RoleAssignment({ guild, password, busy, run }: {
+  guild: Guild; password: string; busy: string | null;
+  run: (key: string, fn: () => Promise<string>) => Promise<void>;
+}) {
+  const roles = guild.roles.filter((r) => !r.managed && r.id !== guild.id);
+  const [userId, setUserId] = useState("");
+  const [roleId, setRoleId] = useState(roles[0]?.id ?? "");
+  const validId = /^\d{5,25}$/.test(userId.trim());
+  return (
+    <form className="space-y-3" onSubmit={(e) => {
+      e.preventDefault();
+      if (!validId || !roleId || busy) return;
+      void run("role", async () => {
+        const result = await assignRole({ data: { password, guildId: guild.id, userId: userId.trim(), roleId } });
+        return result.alreadyAssigned
+          ? `${result.username} já tem o cargo ${result.roleName}.`
+          : `Cargo ${result.roleName} atribuído a ${result.username}.`;
+      });
+    }}>
+      <div className="space-y-1.5">
+        <label htmlFor="role-member" className="text-sm">ID da pessoa no Discord</label>
+        <Input id="role-member" placeholder="ID da pessoa" inputMode="numeric" value={userId} onChange={(e) => setUserId(e.target.value)} disabled={!!busy} />
+      </div>
+      <div className="space-y-1.5">
+        <label htmlFor="role-choice" className="text-sm">Cargo</label>
+        <select id="role-choice" className="h-10 w-full min-w-0 rounded-md border bg-background px-3 text-sm" value={roleId} onChange={(e) => setRoleId(e.target.value)} disabled={!!busy || !roles.length}>
+          {!roles.length && <option value="">Nenhum cargo disponível</option>}
+          {roles.map((r) => <option key={r.id} value={r.id}>{r.name}</option>)}
+        </select>
+      </div>
+      <Button type="submit" disabled={!!busy || !validId || !roleId}><Shield />{busy === "role" ? "Atribuindo..." : "Atribuir cargo"}</Button>
+    </form>
   );
 }
 

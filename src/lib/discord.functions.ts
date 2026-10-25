@@ -52,7 +52,7 @@ export const getGuild = createServerFn({ method: "POST" })
         .map((c) => ({ id: c.id as string, name: c.name as string, type: c.type as number, parentId: (c.parent_id ?? null) as string | null, position: c.position as number }))
         .sort((a, b) => a.position - b.position),
       roles: roles
-        .map((r) => ({ id: r.id as string, name: r.name as string, color: r.color ? `#${r.color.toString(16).padStart(6, "0")}` : null, position: r.position as number }))
+        .map((r) => ({ id: r.id as string, name: r.name as string, color: r.color ? `#${r.color.toString(16).padStart(6, "0")}` : null, position: r.position as number, managed: Boolean(r.managed) }))
         .sort((a, b) => b.position - a.position),
     };
   });
@@ -97,4 +97,11 @@ export const sendIpPanel = createServerFn({ method: "POST" })
     const d = await guard(data.password);
     await d.sendEyePanel(data.channelId);
     return { ok: true };
+  });
+
+export const assignRole = createServerFn({ method: "POST" })
+  .inputValidator((d) => auth.extend({ guildId: snowflake, userId: snowflake, roleId: snowflake }).parse(d))
+  .handler(async ({ data }) => {
+    const d = await guard(data.password);
+    return d.assignMemberRole(data.guildId, data.userId, data.roleId);
   });
