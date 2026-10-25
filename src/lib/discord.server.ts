@@ -1,4 +1,5 @@
 import { PANELEIRO_RULES_LIST } from "./rules";
+import { TEMPLATE, TEMPLATE_NAME } from "./discord-template";
 
 const API = "https://discord.com/api/v10";
 
@@ -212,70 +213,6 @@ export async function postRules(channelId: string) {
   }
 }
 
-interface TemplateChannel {
-  name: string;
-  type: number;
-  topic?: string;
-  user_limit?: number;
-  rules?: boolean;
-}
-
-const TEMPLATE: { category: string; channels: TemplateChannel[] }[] = [
-  {
-    category: "✦ ɪɴꜰᴏ",
-    channels: [
-      { name: "・ʀᴇɢʀᴀs", type: 0, topic: "Regras da casa. Apenas leitura.", rules: true },
-      { name: "・ᴀɴᴜɴᴄɪᴏs", type: 0, topic: "Avisos da administração." },
-      { name: "・ᴘʟᴀǫᴜɪɴʜᴀs", type: 0, topic: "Pedidos de plaquinhas." },
-    ],
-  },
-  {
-    category: "✦ ᴄʜᴀᴛ",
-    channels: [
-      { name: "・ᴄʜᴀᴛ", type: 0 },
-      { name: "・ᴍɪᴅɪᴀs", type: 0 },
-      { name: "・ʙᴜsᴄᴀʀ-ɪᴘ", type: 0 },
-      { name: "・ᴄᴏᴍᴀɴᴅᴏs", type: 0 },
-      { name: "・ᴅɪᴠᴜʟɢᴀᴄᴀᴏ", type: 0 },
-    ],
-  },
-  {
-    category: "✦ ᴅᴜᴏs",
-    channels: [
-      { name: "⏐ᴅᴜᴏ・ɪ", type: 2, user_limit: 2 },
-      { name: "⏐ᴅᴜᴏ・ɪɪ", type: 2, user_limit: 2 },
-    ],
-  },
-  {
-    category: "✦ ᴄᴀʟʟs",
-    channels: [
-      { name: "⏐ᴄᴀʟʟ・ɪ", type: 2 },
-      { name: "⏐ᴄᴀʟʟ・ɪɪ", type: 2 },
-    ],
-  },
-  {
-    category: "✦ ɢꜰ",
-    channels: [
-      { name: "⏐ɢꜰ・ɪ", type: 2, user_limit: 2 },
-      { name: "⏐ɢꜰ・ɪɪ", type: 2, user_limit: 2 },
-    ],
-  },
-  {
-    category: "✦ ᴍᴜsɪᴄᴀ",
-    channels: [
-      { name: "⏐ᴍᴜsɪᴄᴀ・ɪ", type: 2 },
-      { name: "⏐ᴍᴜsɪᴄᴀ・ɪɪ", type: 2 },
-    ],
-  },
-  {
-    category: "✦ ᴀꜰᴋ",
-    channels: [
-      { name: "⏐ᴀꜰᴋ・ɪ", type: 2 },
-      { name: "⏐ᴀꜰᴋ・ɪɪ", type: 2 },
-    ],
-  },
-];
-
 interface ExistingChannel {
   id: string;
   name: string;
@@ -283,11 +220,17 @@ interface ExistingChannel {
   parent_id?: string | null;
   topic?: string | null;
   user_limit?: number;
+  position?: number;
 }
 
 export async function loadTemplate(guildId: string, purge: boolean, keepChannelId?: string) {
   const logs: string[] = [];
   let existing = await dc<ExistingChannel[]>(`/guilds/${guildId}/channels`);
+  const guild = await dc<{ name: string }>(`/guilds/${guildId}`);
+  if (guild.name !== TEMPLATE_NAME) {
+    await dc(`/guilds/${guildId}`, { method: "PATCH", body: JSON.stringify({ name: TEMPLATE_NAME }) });
+    logs.push("Nome do servidor atualizado.");
+  }
 
   if (purge) {
     let removed = 0;
@@ -310,9 +253,11 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
   let rulesChannel: string | undefined;
   let rulesChannelIsNew = false;
 
-  for (const block of TEMPLATE) {
+  const positions: { id: string; position: number }[] = [];
+  for (const [categoryPosition, block] of TEMPLATE.entries()) {
     // Find or create the category.
-    let cat = existing.find((c) => c.type === 4 && c.name === block.category);
+    let cat = existing.find((c) => c.type === 4 && c.name === block.category)
+      ?? existing.find((c) => c.type === 4 && block.aliases?.includes(c.name));
     if (!cat) {
       cat = await dc<ExistingChannel>(`/guilds/${guildId}/channels`, {
         method: "POST",
@@ -323,14 +268,22 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
       logs.push(`Categoria criada: ${block.category}`);
     }
 
-    for (const ch of block.channels) {
-      const { rules, ...wanted } = ch;
-      const found = existing.find((c) => c.type === ch.type && c.name === ch.name);
+    if (cat.name !== block.category) {
+      await dc(`/channels/${cat.id}`, { method: "PATCH", body: JSON.stringify({ name: block.category }) });
+      cat.name = block.category;
+      updated++;
+    }
+    if (cat.position !== categoryPosition) positions.push({ id: cat.id, position: categoryPosition });
+
+    for (const [channelPosition, ch] of block.channels.entries()) {
+      const { rules, aliases, ...wanted } = ch;
+      const found = existing.find((c) => c.type === ch.type && c.name === ch.name)
+        ?? existing.find((c) => c.type === ch.type && aliases?.includes(c.name));
 
       if (!found) {
         const c = await dc<ExistingChannel>(`/guilds/${guildId}/channels`, {
           method: "POST",
-          body: JSON.stringify({ ...wanted, parent_id: cat.id }),
+          body: JSON.stringify({ ...wanted, parent_id: cat.id, position: channelPosition }),
         });
         existing.push({ ...c, parent_id: cat.id });
         created++;
@@ -343,12 +296,15 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
 
       // Channel exists: only edit what changed.
       const patch: Record<string, unknown> = {};
+      if (found.name !== ch.name) patch["name"] = ch.name;
+      if (found.position !== channelPosition) positions.push({ id: found.id, position: channelPosition });
       if ((found.parent_id ?? null) !== cat.id) patch["parent_id"] = cat.id;
       if (ch.type === 0 && ch.topic !== undefined && (found.topic ?? "") !== ch.topic) patch["topic"] = ch.topic;
       if (ch.type === 2 && ch.user_limit !== undefined && (found.user_limit ?? 0) !== ch.user_limit) patch["user_limit"] = ch.user_limit;
 
       if (Object.keys(patch).length > 0) {
         await dc(`/channels/${found.id}`, { method: "PATCH", body: JSON.stringify(patch) });
+        Object.assign(found, patch);
         updated++;
       } else {
         skipped++;
@@ -357,10 +313,14 @@ export async function loadTemplate(guildId: string, purge: boolean, keepChannelI
     }
   }
 
+  if (positions.length) {
+    await dc(`/guilds/${guildId}/channels`, { method: "PATCH", body: JSON.stringify(positions) });
+    logs.push("Ordem das categorias e canais atualizada.");
+  }
   logs.push(`${created} criados, ${updated} editados, ${skipped} já estavam certos.`);
   if (rulesChannel && (rulesChannelIsNew || purge)) {
     await postRules(rulesChannel);
-    logs.push("Regras publicadas em ・ʀᴇɢʀᴀs.");
+    logs.push("Regras publicadas em ▣・𝖗𝖊𝖌𝖗𝖆𝖘.");
   }
   return { created, updated, skipped, logs };
 }

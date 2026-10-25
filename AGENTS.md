@@ -8,3 +8,5 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep Discord template definitions and legacy name aliases in the browser-safe discord-template module; the server reconciler reuses channel IDs to preserve messages during template updates.
