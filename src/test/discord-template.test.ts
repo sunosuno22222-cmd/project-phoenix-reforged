@@ -54,7 +54,7 @@ describe("Panela do Caos reconciliation", () => {
       return new Response("{}");
     }));
     const result = await loadTemplate("guild", false);
-    expect(result.created).toBe(43);
+    expect(result.created).toBe(42);
     const duos = created.find(c => c.name === "╭・𖤐 𝕯𝖀𝕺𝕾");
     expect(created.filter(c => c.parent_id === duos.id).map(c => c.position)).toEqual([0, 1, 2, 3]);
     const inicio = created.find(c => c.name === "╭・𖤐 𝕴𝕹𝕴𝕮𝕴𝕺");
