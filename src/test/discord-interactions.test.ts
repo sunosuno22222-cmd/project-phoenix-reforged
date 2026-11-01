@@ -32,7 +32,7 @@ describe("Discord IP interactions", () => {
     expect(mocks.enterPrivateEye).toHaveBeenCalledWith("https://discord.com/api/v10/webhooks/app/interaction-token", "12345");
   });
   it("returns the IP result only in a private deferred response", async () => {
-    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    const fetchMock = vi.fn(async (_url: string, _init?: RequestInit) => new Response(null, { status: 204 }));
     vi.stubGlobal("fetch", fetchMock);
     expect(await interaction({ type: 5, data: { custom_id: "ip_modal", components: [{ components: [{ value: "8.8.8.8" }] }] } })).toEqual({ type: 5, data: { flags: 64 } });
     expect(JSON.parse(fetchMock.mock.calls[0]?.[1]?.body as string)).toEqual({ content: "## **País:**\nBrasil", allowed_mentions: { parse: [] } });

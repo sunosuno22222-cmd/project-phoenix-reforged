@@ -17,7 +17,7 @@ export function gifMessage(payload: Record<string, unknown>, filename: string, d
 }
 
 async function postMedia(url: string, method: string, payload: Record<string, unknown>, filename: string, source: string, headers?: HeadersInit) {
-  const response = await fetch(url, { method, headers, body: gifMessage(payload, filename, source) });
+  const response = await fetch(url, { method, headers: headers ?? {}, body: gifMessage(payload, filename, source) });
   if (!response.ok) {
     const message = await response.text();
     console.error(`Discord media failed [${response.status}]: ${message}`);
