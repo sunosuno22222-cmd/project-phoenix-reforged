@@ -22,9 +22,9 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PanelBot — Painel do bot Discord" },
+      { title: "Olho do Inferno — Painel Discord" },
       { name: "description", content: "Gerencie seu bot Discord real: servidores, canais, cargos, regras e comando /load." },
-      { property: "og:title", content: "PanelBot — Painel do bot Discord" },
+      { property: "og:title", content: "Olho do Inferno — Painel Discord" },
       { property: "og:description", content: "Gerencie seu bot Discord real: servidores, canais, cargos, regras e comando /load." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -80,7 +80,7 @@ function Panel() {
         >
           <img src={avatar} alt="PanelBot" className="mx-auto h-16 w-16 rounded-2xl" />
           <div className="text-center">
-            <h1 className="text-2xl font-bold">PanelBot</h1>
+            <h1 className="text-2xl font-bold">Olho do Inferno</h1>
             <p className="text-sm text-muted-foreground">Digite a senha do painel para controlar o bot.</p>
           </div>
           <Input type="password" placeholder="Senha do painel" value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -247,7 +247,7 @@ function Actions({ guild, password, busy, run, onDone }: { guild: Guild; passwor
       <div className="flex flex-wrap gap-2">
         <Button
           disabled={!!busy}
-          onClick={() => run("cmd", async () => { await registerSlashCommands({ data: { password, guildId: guild.id } }); return "Comandos /load e /regras registrados."; })}
+          onClick={() => run("cmd", async () => { await registerSlashCommands({ data: { password, guildId: guild.id } }); return "Comandos /load, /regras e /ip-embed registrados."; })}
         >
           {busy === "cmd" ? "Registrando..." : "Registrar comandos /"}
         </Button>
@@ -289,8 +289,8 @@ function Actions({ guild, password, busy, run, onDone }: { guild: Guild; passwor
             <ScrollText /> Publicar regras
           </Button>
           <Button variant="destructive" disabled={!!busy || !channelId}
-            onClick={() => run("eye", async () => { await sendIpPanel({ data: { password, channelId } }); return "Olho do Inferno enviado."; })}>
-            Enviar Olho do Inferno
+            onClick={() => run("eye", async () => { await sendIpPanel({ data: { password, channelId } }); return "Portal do Olho do Inferno enviado."; })}>
+            Enviar portal do Olho do Inferno
           </Button>
         </div>
       </div>

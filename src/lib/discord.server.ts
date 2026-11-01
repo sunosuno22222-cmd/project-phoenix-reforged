@@ -63,37 +63,11 @@ export const SLASH_COMMANDS = [
   },
 ];
 
-import eyeGif from "@/assets/eye.gif?inline";
-
-function eyeBlob() {
-  const b64 = eyeGif.split(",")[1] ?? "";
-  const bin = atob(b64);
-  const out = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
-  return new Blob([out], { type: "image/gif" });
-}
-
-export const IP_PANEL = {
-  embeds: [{
-    title: "ᴏʟʜᴏ ᴅᴏ ɪɴꜰᴇʀɴᴏ",
-    description: "Clique no botão para abrir um ticket privado e consultar um IP.",
-    color: 0xb91c1c,
-    image: { url: "attachment://eye.gif" },
-    footer: { text: "ᴏ ᴏʟʜᴏ ᴠᴇ ᴛᴜᴅᴏ" },
-  }],
-  components: [{ type: 1, components: [{ type: 2, style: 4, label: "Abrir ticket", custom_id: "ip_open" }] }],
-};
+export { portalPanel as IP_PANEL } from "./discord-ip";
 
 export async function sendEyePanel(channelId: string) {
-  const fd = new FormData();
-  fd.append("payload_json", JSON.stringify({ ...IP_PANEL, attachments: [{ id: 0, filename: "eye.gif" }] }));
-  fd.append("files[0]", eyeBlob(), "eye.gif");
-  const res = await fetch(`${API}/channels/${channelId}/messages`, {
-    method: "POST",
-    headers: { Authorization: `Bot ${botToken()}` },
-    body: fd,
-  });
-  if (!res.ok) throw new Error(`Discord ${res.status}: ${(await res.text()).slice(0, 300)}`);
+  const { sendPortalPanel } = await import("./discord-ip-media.server");
+  await sendPortalPanel(channelId);
 }
 
 export async function openIpTicket(guildId: string, userId: string, username: string) {
